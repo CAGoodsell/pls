@@ -2,6 +2,7 @@
 /**
  * @var SiteController $this
  * @var LoginForm      $model
+ * @var Array		   $slides
  */
 $txtLogin = Yii::t('pls', 'Login');
 $this->pageTitle = Yii::app()->name . ' - ' . $txtLogin;
@@ -19,7 +20,7 @@ $this->breadcrumbs = [
 		</div>
 		<div class="col-md-6">
 			<?php
-			$this->renderPartial('_slides');
+			$this->renderPartial('_slides', ['slides'=>$slides]);
 			?>
 		</div>
 	</div>
