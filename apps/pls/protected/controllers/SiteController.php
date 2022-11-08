@@ -8,14 +8,16 @@
  * @copyright  PLS 3rd Learning, Inc. All rights reserved.
  */
 
-class SiteController extends Controller {
+class SiteController extends Controller
+{
 
 	/**
 	 * Specifies the action filters.
 	 *
 	 * @return array action filters
 	 */
-	public function filters() {
+	public function filters()
+	{
 		return [
 			'accessControl',
 		];
@@ -26,7 +28,8 @@ class SiteController extends Controller {
 	 *
 	 * @return array access control rules
 	 */
-	public function accessRules() {
+	public function accessRules()
+	{
 		return [
 			[
 				'allow',  // allow all users to access specified actions.
@@ -49,7 +52,8 @@ class SiteController extends Controller {
 	 *
 	 * @return void
 	 */
-	public function init() {
+	public function init()
+	{
 		$this->defaultAction = 'login';
 	}
 
@@ -58,7 +62,8 @@ class SiteController extends Controller {
 	 *
 	 * @return void
 	 */
-	public function actionAbout() {
+	public function actionAbout()
+	{
 		$this->render('about');
 	}
 
@@ -67,7 +72,8 @@ class SiteController extends Controller {
 	 *
 	 * @return void
 	 */
-	public function actionLogin() {
+	public function actionLogin()
+	{
 		if (!defined('CRYPT_BLOWFISH') || !CRYPT_BLOWFISH) {
 			throw new CHttpException(500, 'This application requires that PHP was compiled with Blowfish support for crypt().');
 		}
@@ -82,7 +88,41 @@ class SiteController extends Controller {
 				$this->redirect(Yii::app()->user->returnUrl);
 			}
 		}
-		$this->render('login', ['model' => $model]);
+		
+		// get slide information and pass to view as slide variable
+		$slides = [];
+		
+		Feed::$userAgent = Yii::app()->params['curlUserAgent'];
+		Feed::$cacheDir = Yii::app()->params['latestUpdatesFeedCacheDir'];
+		Feed::$cacheExpire = Yii::app()->params['latestUpdatesFeedCacheExp'];
+
+		$feed = Feed::loadRss(Yii::app()->params['latestUpdatesFeedUrl']);
+		if (!empty($feed)) {
+			$count = 0;
+			foreach ($feed->item as $item) {
+				$more = ' <a href="' . $item->link . '" target="_blank">Read more</a>';
+				$item->description = trim(str_replace(' [&#8230;]', '...' . $more, $item->description));
+				$item->description = preg_replace('/The post.*appeared first on .*\./', '', $item->description);
+				$count++;
+				$slides[] = $item;
+				if($count == 1){break;}
+			}
+		}
+
+		$feed = Feed::loadRss(Yii::app()->params['latestBlogUrl']);
+		if (!empty($feed)) {
+			$count = 0;
+			foreach ($feed->item as $item) {
+				$more = ' <a href="' . $item->link . '" target="_blank">Read more</a>';
+				$item->description = trim(str_replace(' [&#8230;]', '...' . $more, $item->description));
+				$item->description = preg_replace('/The post.*appeared first on .*\./', '', $item->description);
+				$count++;
+				$slides[] = $item;
+				if($count == 1){break;}
+			}
+		}
+		
+		$this->render('login', ['model' => $model, 'slides' => $slides]);
 	}
 
 	/**
@@ -90,7 +130,8 @@ class SiteController extends Controller {
 	 *
 	 * @return void
 	 */
-	public function actionLogout() {
+	public function actionLogout()
+	{
 		Yii::app()->user->logout();
 		$this->redirect(Yii::app()->homeUrl);
 	}
@@ -100,12 +141,12 @@ class SiteController extends Controller {
 	 *
 	 * @return void
 	 */
-	public function actionError() {
+	public function actionError()
+	{
 		if ($error = Yii::app()->errorHandler->error) {
 			if (Yii::app()->request->isAjaxRequest) {
 				echo $error['message'];
-			}
-			else {
+			} else {
 				$this->render('//site/error', $error);
 			}
 		}
